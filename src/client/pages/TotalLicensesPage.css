@@ -1,0 +1,170 @@
+.total-licenses-page {
+  padding: 20px 0;
+  height: fit-content;
+}
+
+.page-header {
+  margin-bottom: 30px;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  font-size: 14px;
+  cursor: pointer;
+  margin-bottom: 15px;
+  padding: 8px 0;
+  transition: color 0.2s ease;
+}
+
+.back-btn:hover {
+  color: #2563eb;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.page-header h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.licenses-summary {
+  display: flex;
+  gap: 30px;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.summary-label {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.summary-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.licenses-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  border: 1px solid #f1f5f9;
+  overflow: hidden;
+  width: fit-content;
+  min-width: 100%;
+  height: fit-content;
+}
+
+.scrollable-table {
+  overflow-y: auto;
+}
+
+.all-licenses-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.all-licenses-table th {
+  text-align: left;
+  font-weight: 500;
+  color: #64748b;
+  font-size: 14px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 1;
+}
+
+.table-row {
+  transition: background-color 0.2s ease;
+}
+
+.table-row:hover {
+  background-color: #f8fafc;
+}
+
+.all-licenses-table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 14px;
+  color: #374151;
+}
+
+.license-id {
+  color: #6b7280;
+  font-family: 'SF Mono', Monaco, Consolas, 'Liberation Mono', monospace;
+}
+
+.license-name {
+  font-weight: 500;
+  color: #1f2937;
+  max-width: 300px;
+}
+
+.license-date {
+  color: #6b7280;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.status-badge.active {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.status-badge.inactive {
+  background-color: #fff5f5;
+  color: #e53e3e;
+}
+
+.license-cost {
+  font-weight: 600;
+  color: #059669;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+  
+  .licenses-summary {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .all-licenses-table th,
+  .all-licenses-table td {
+    padding: 12px 16px;
+  }
+  
+  .license-name {
+    max-width: 200px;
+  }
+}
