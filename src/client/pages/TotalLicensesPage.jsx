@@ -69,7 +69,7 @@ export default function TotalLicensesPage({ navigate, employeeId }) {
                 <tr key={index} className="table-row">
                   <td className="license-id">{license.id}</td>
                   <td className="license-name">{license.name}</td>
-                  <td className="license-date">{license.date}</td>
+                  <td className="license-date" style={{ textAlign: 'center' }}>{license.date || '—'}</td>
                   <td>
                     <span className={`status-badge ${license.status.toLowerCase()}`}>
                       {license.status}

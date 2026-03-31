@@ -66,7 +66,7 @@ export default function LicenseReturnPage({ navigate, employeeId }) {
                   >
                     <td className="license-id">{license.id}</td>
                     <td className="license-name">{license.name}</td>
-                    <td className="license-date">{license.date}</td>
+                    <td className="license-date" style={{ textAlign: 'center' }}>{license.date || '—'}</td>
                     <td>
                       <span className={`status-badge ${license.status.toLowerCase()}`}>
                         {license.status}

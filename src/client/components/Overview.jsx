@@ -78,7 +78,7 @@ export default function Overview({ navigate, employeeId }) {
           <circle cx={center} cy={center} r={radius}
             fill="none" stroke="url(#gradientFull)" strokeWidth={strokeWidth}
             strokeDasharray={`${usedDash} ${unusedDash}`}
-            strokeLinecap="round"
+            strokeLinecap="butt"
             transform={`rotate(-90 ${center} ${center})`} />
         </svg>
         <div className="chart-center">

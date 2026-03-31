@@ -42,7 +42,7 @@ function DonutChart({ effectiveness }) {
         <circle cx={center} cy={center} r={radius}
           fill="none" stroke="url(#ceGradUsed)" strokeWidth={strokeWidth}
           strokeDasharray={`${usedDash} ${unusedDash}`}
-          strokeLinecap="round"
+          strokeLinecap="butt"
           transform={`rotate(-90 ${center} ${center})`} />
       </svg>
       <div className="ce-donut-center">
@@ -144,7 +144,7 @@ export default function CostEffectivenessPage({ navigate, employeeId }) {
                   >
                     <td className="ce-id">{license.id}</td>
                     <td className="ce-name">{license.name}</td>
-                    <td className="ce-date">{license.date || '—'}</td>
+                    <td className="ce-date" style={{ textAlign: 'center' }}>{license.date || '—'}</td>
                     <td>
                       {license.status && (
                         <span className={`status-badge ${license.status.toLowerCase()}`}>
