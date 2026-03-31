@@ -75,12 +75,10 @@ const Login = ({ onLogin }) => {
                 <div className="login-help">
                     <p>
                         <strong>Need help?</strong><br />
-                        You can find your Employee ID on the front of your Employee Card.
+                        You can find your Employee ID on your Employee Card.
                     </p>
                 </div>
             </div>
         </div>
     );
 };
-
-export default Login;
