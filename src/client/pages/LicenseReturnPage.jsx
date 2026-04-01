@@ -5,9 +5,9 @@ import './LicenseReturnPage.css';
 function sortLicenses(licenses, key, dir) {
   return [...licenses].sort((a, b) => {
     let valA, valB;
-    if (key === 'cost' || key === 'price') {
-      valA = parseFloat(String(a.cost ?? a.price ?? '').replace(/[^0-9.]/g, '')) || 0;
-      valB = parseFloat(String(b.cost ?? b.price ?? '').replace(/[^0-9.]/g, '')) || 0;
+    if (key === 'cost') {
+      valA = parseFloat(String(a.cost ?? '').replace(/[^0-9.]/g, '')) || 0;
+      valB = parseFloat(String(b.cost ?? '').replace(/[^0-9.]/g, '')) || 0;
     } else if (key === 'date') {
       valA = a.date ? new Date(a.date).getTime() : 0;
       valB = b.date ? new Date(b.date).getTime() : 0;
@@ -36,6 +36,8 @@ export default function LicenseReturnPage({ navigate, employeeId }) {
   const [selectedLicense, setSelectedLicense] = useState(null);
   const [sortKey, setSortKey] = useState(null);
   const [sortDir, setSortDir] = useState('asc');
+  const [submitting, setSubmitting] = useState(false);
+  const [result, setResult] = useState(null);
 
   useEffect(() => {
     async function load() {
@@ -57,6 +59,51 @@ export default function LicenseReturnPage({ navigate, employeeId }) {
     } else {
       setSortKey(key);
       setSortDir('asc');
+    }
+  };
+
+  const handleLicenseClick = (license) => {
+    setSelectedLicense(license);
+    setResult(null);
+  };
+
+  const handleReturn = async () => {
+    if (!selectedLicense) return;
+    setSubmitting(true);
+    setResult(null);
+
+    try {
+      const token = window.g_ck || '';
+      const response = await fetch(
+        '/api/1917927/license_return/create',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-UserToken': token
+          },
+          body: JSON.stringify({
+            employeeId: employeeId,
+            licenseName: selectedLicense.name,
+            licenseId: selectedLicense.id
+          })
+        }
+      );
+
+      const data = await response.json();
+      console.log('Status:', response.status);  // NEU
+      console.log('Response:', data);   
+
+      if (response.ok && data.result?.success) {
+        setResult({ type: 'success', message: `Ticket created: ${data.result.incident}` });
+      } else {
+        setResult({ type: 'error', message: 'Failed to create ticket.' });
+      }
+    } catch (err) {
+      setResult({ type: 'error', message: err.message });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -102,7 +149,7 @@ export default function LicenseReturnPage({ navigate, employeeId }) {
                   <tr
                     key={index}
                     className={`table-row ${selectedLicense?.id === license.id ? 'selected' : ''}`}
-                    onClick={() => setSelectedLicense(license)}
+                    onClick={() => handleLicenseClick(license)}
                   >
                     <td className="license-id">{license.id}</td>
                     <td className="license-name">{license.name}</td>
@@ -136,12 +183,25 @@ export default function LicenseReturnPage({ navigate, employeeId }) {
                 <label>Product ID</label>
                 <div className="field-value">{selectedLicense.id}</div>
               </div>
-              <button className="return-btn" onClick={() => {
-                const currentUser = window.g_user?.getUserName() || 'current_user';
-                console.log(`User ${currentUser} wants to return license ${selectedLicense.name} with ID ${selectedLicense.id}`);
-              }}>
-                Return License
+              <button
+                className="return-btn"
+                onClick={handleReturn}
+                disabled={submitting}
+              >
+                {submitting ? 'Creating ticket...' : 'Return License'}
               </button>
+              {result && (
+                <div style={{
+                  marginTop: 12,
+                  padding: '10px 14px',
+                  borderRadius: 8,
+                  fontSize: 13,
+                  backgroundColor: result.type === 'success' ? '#dcfce7' : '#fff5f5',
+                  color: result.type === 'success' ? '#166534' : '#e53e3e'
+                }}>
+                  {result.message}
+                </div>
+              )}
             </div>
           ) : (
             <div className="no-selection">
