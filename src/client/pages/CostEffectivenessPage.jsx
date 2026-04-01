@@ -18,6 +18,33 @@ function calcEffectiveness(license) {
   return { unusedRatio, unusedCost, effectiveness };
 }
 
+function sortLicenses(licenses, key, dir) {
+  return [...licenses].sort((a, b) => {
+    let valA, valB;
+    if (key === 'cost') {
+      valA = parseFloat(String(a.cost).replace(/[^0-9.]/g, '')) || 0;
+      valB = parseFloat(String(b.cost).replace(/[^0-9.]/g, '')) || 0;
+    } else if (key === 'date') {
+      valA = a.date ? new Date(a.date).getTime() : 0;
+      valB = b.date ? new Date(b.date).getTime() : 0;
+    } else {
+      valA = String(a[key] ?? '').toLowerCase();
+      valB = String(b[key] ?? '').toLowerCase();
+    }
+    if (valA < valB) return dir === 'asc' ? -1 : 1;
+    if (valA > valB) return dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+}
+
+function SortIcon({ active, dir }) {
+  return (
+    <span style={{ marginLeft: 4, opacity: active ? 1 : 0.3, fontSize: 11 }}>
+      {active && dir === 'desc' ? '↓' : '↑'}
+    </span>
+  );
+}
+
 function DonutChart({ effectiveness }) {
   const size = 220;
   const strokeWidth = 32;
@@ -56,6 +83,20 @@ export default function CostEffectivenessPage({ navigate, employeeId }) {
   const [licenses, setLicenses] = useState([]);
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sortKey, setSortKey] = useState(null);
+  const [sortDir, setSortDir] = useState('asc');
+
+  const handleSort = (key) => {
+    if (sortKey === key) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  };
+
+  const displayedLicenses = sortKey ? sortLicenses(licenses, sortKey, sortDir) : licenses;
+  const thStyle = { cursor: 'pointer', userSelect: 'none' };
 
   useEffect(() => {
     async function load() {
@@ -126,15 +167,25 @@ export default function CostEffectivenessPage({ navigate, employeeId }) {
           <table className="ce-table">
             <thead>
               <tr>
-                <th>Product ID</th>
-                <th>Product</th>
-                <th>Last Used</th>
-                <th>Status</th>
-                <th>Cost</th>
+                <th style={thStyle} onClick={() => handleSort('id')}>
+                  Product ID <SortIcon active={sortKey === 'id'} dir={sortDir} />
+                </th>
+                <th style={thStyle} onClick={() => handleSort('name')}>
+                  Product <SortIcon active={sortKey === 'name'} dir={sortDir} />
+                </th>
+                <th style={{ ...thStyle, textAlign: 'center' }} onClick={() => handleSort('date')}>
+                  Last Used <SortIcon active={sortKey === 'date'} dir={sortDir} />
+                </th>
+                <th style={thStyle} onClick={() => handleSort('status')}>
+                  Status <SortIcon active={sortKey === 'status'} dir={sortDir} />
+                </th>
+                <th style={thStyle} onClick={() => handleSort('cost')}>
+                Cost <SortIcon active={sortKey === 'cost'} dir={sortDir} />
+                </th>
               </tr>
             </thead>
             <tbody>
-              {licenses.map((license, i) => {
+              {displayedLicenses.map((license, i) => {
                 const eff = calcEffectiveness(license);
                 return (
                   <tr
