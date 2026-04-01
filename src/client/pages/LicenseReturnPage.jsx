@@ -38,6 +38,7 @@ export default function LicenseReturnPage({ navigate, employeeId }) {
   const [sortDir, setSortDir] = useState('asc');
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
+  const [returnedIds, setReturnedIds] = useState(new Set());
 
   useEffect(() => {
     async function load() {
@@ -69,6 +70,13 @@ export default function LicenseReturnPage({ navigate, employeeId }) {
 
   const handleReturn = async () => {
     if (!selectedLicense) return;
+
+    // Bereits zurückgegeben – blockieren
+    if (returnedIds.has(selectedLicense.id)) {
+      setResult({ type: 'warning', message: 'A return request for this license already exists.' });
+      return;
+    }
+
     setSubmitting(true);
     setResult(null);
 
@@ -92,10 +100,16 @@ export default function LicenseReturnPage({ navigate, employeeId }) {
       );
 
       const data = await response.json();
-      console.log('Status:', response.status);  // NEU
-      console.log('Response:', data);   
+      console.log('Status:', response.status);
+      console.log('Response:', data);
 
-      if (response.ok && data.result?.success) {
+      if (response.status === 409) {
+        // Duplikat vom Server erkannt
+        setReturnedIds(prev => new Set(prev).add(selectedLicense.id));
+        setResult({ type: 'warning', message: `Already requested: ${data.result?.message || 'Ticket already exists.'}` });
+      } else if (response.ok && data.result?.success) {
+        // Erfolgreich erstellt – ID als returned markieren
+        setReturnedIds(prev => new Set(prev).add(selectedLicense.id));
         setResult({ type: 'success', message: `Ticket created: ${data.result.incident}` });
       } else {
         setResult({ type: 'error', message: 'Failed to create ticket.' });
@@ -109,6 +123,12 @@ export default function LicenseReturnPage({ navigate, employeeId }) {
 
   const displayed = sortKey ? sortLicenses(licenses, sortKey, sortDir) : licenses;
   const thStyle = { cursor: 'pointer', userSelect: 'none' };
+
+  const resultColors = {
+    success: { bg: '#dcfce7', color: '#166534' },
+    warning: { bg: '#fef9c3', color: '#854d0e' },
+    error:   { bg: '#fff5f5', color: '#e53e3e' }
+  };
 
   if (loading) return <p>Loading licenses...</p>;
   if (error)   return <p>Error: {error}</p>;
@@ -150,9 +170,20 @@ export default function LicenseReturnPage({ navigate, employeeId }) {
                     key={index}
                     className={`table-row ${selectedLicense?.id === license.id ? 'selected' : ''}`}
                     onClick={() => handleLicenseClick(license)}
+                    style={{ opacity: returnedIds.has(license.id) ? 0.45 : 1 }}
                   >
                     <td className="license-id">{license.id}</td>
-                    <td className="license-name">{license.name}</td>
+                    <td className="license-name">
+                      {license.name}
+                      {returnedIds.has(license.id) && (
+                        <span style={{
+                          marginLeft: 8, fontSize: 11, color: '#854d0e',
+                          background: '#fef9c3', padding: '2px 6px', borderRadius: 10
+                        }}>
+                          requested
+                        </span>
+                      )}
+                    </td>
                     <td className="license-date" style={{ textAlign: 'center' }}>{license.date || '—'}</td>
                     <td>
                       <span className={`status-badge ${license.status.toLowerCase()}`}>
@@ -186,18 +217,16 @@ export default function LicenseReturnPage({ navigate, employeeId }) {
               <button
                 className="return-btn"
                 onClick={handleReturn}
-                disabled={submitting}
+                disabled={submitting || returnedIds.has(selectedLicense.id)}
+                style={{ opacity: returnedIds.has(selectedLicense.id) ? 0.5 : 1 }}
               >
-                {submitting ? 'Creating ticket...' : 'Return License'}
+                {submitting ? 'Creating ticket...' : returnedIds.has(selectedLicense.id) ? 'Already requested' : 'Return License'}
               </button>
               {result && (
                 <div style={{
-                  marginTop: 12,
-                  padding: '10px 14px',
-                  borderRadius: 8,
-                  fontSize: 13,
-                  backgroundColor: result.type === 'success' ? '#dcfce7' : '#fff5f5',
-                  color: result.type === 'success' ? '#166534' : '#e53e3e'
+                  marginTop: 12, padding: '10px 14px', borderRadius: 8, fontSize: 13,
+                  backgroundColor: resultColors[result.type].bg,
+                  color: resultColors[result.type].color
                 }}>
                   {result.message}
                 </div>
