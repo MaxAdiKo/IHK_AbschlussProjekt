@@ -7,6 +7,10 @@
   margin-bottom: 30px;
 }
 
+th:nth-child(3) {
+  text-align: center;
+}
+
 .back-btn {
   background: none;
   border: none;
@@ -104,6 +108,10 @@
 .license-software {
   font-weight: 500;
   color: #1f2937;
+}
+
+.license-date {
+  text-align: center;
 }
 
 .license-id {

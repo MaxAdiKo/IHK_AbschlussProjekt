@@ -7,6 +7,10 @@
   margin-bottom: 30px;
 }
 
+.all-licenses-table th:nth-child(3) {
+  text-align: center;
+}
+
 .back-btn {
   background: none;
   border: none;
@@ -120,6 +124,7 @@
 
 .license-date {
   color: #6b7280;
+  text-align: center;
 }
 
 .status-badge {
