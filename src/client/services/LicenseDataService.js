@@ -43,7 +43,7 @@ export class LicenseDataService {
         return match ? match[1] : raw;
       })(),
       name:       r.u_product?.display_value   ?? r.u_product     ?? '',
-      date:       r.u_last_used?.display_value ?? r.u_last_used   ?? '',
+      date:       (r.u_last_used?.display_value ?? r.u_last_used   ?? '').split(' ') [0],
       status:     r.u_status?.display_value    ?? r.u_status      ?? '',
       employeeId: r.u_employee_id?.value       ?? r.u_employee_id ?? '',
       cost: (() => {
