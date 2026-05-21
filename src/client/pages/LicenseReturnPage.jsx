@@ -30,21 +30,25 @@ function SortIcon({ active, dir }) {
 }
 
 export default function LicenseReturnPage({ navigate, employeeId }) {
-  const [licenses, setLicenses] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [licenses, setLicenses]               = useState([]);
+  const [loading, setLoading]                 = useState(true);
+  const [error, setError]                     = useState(null);
   const [selectedLicense, setSelectedLicense] = useState(null);
-  const [sortKey, setSortKey] = useState(null);
-  const [sortDir, setSortDir] = useState('asc');
-  const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState(null);
-  const [returnedIds, setReturnedIds] = useState(new Set());
+  const [sortKey, setSortKey]                 = useState(null);
+  const [sortDir, setSortDir]                 = useState('asc');
+  const [submitting, setSubmitting]           = useState(false);
+  const [result, setResult]                   = useState(null);
+  const [returnedIds, setReturnedIds]         = useState(new Set());
 
   useEffect(() => {
     async function load() {
       try {
-        const data = await LicenseDataService.getLicensesForReturn(employeeId);
+        const [data, existingIds] = await Promise.all([
+          LicenseDataService.getLicensesForReturn(employeeId),
+          LicenseDataService.getExistingReturnRequests(employeeId)
+        ]);
         setLicenses(data);
+        setReturnedIds(existingIds);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -71,7 +75,7 @@ export default function LicenseReturnPage({ navigate, employeeId }) {
   const handleReturn = async () => {
     if (!selectedLicense) return;
 
-    // Bereits zurückgegeben – blockieren
+    // Client-seitige Duplikatsperre
     if (returnedIds.has(selectedLicense.id)) {
       setResult({ type: 'warning', message: 'A return request for this license already exists.' });
       return;
@@ -81,48 +85,69 @@ export default function LicenseReturnPage({ navigate, employeeId }) {
     setResult(null);
 
     try {
-      const token = window.g_ck || '';
-      const response = await fetch(
-        '/api/1917927/license_return/create',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-UserToken': token
-          },
-          body: JSON.stringify({
-            employeeId: employeeId,
-            licenseName: selectedLicense.name,
-            licenseId: selectedLicense.id
-          })
-        }
-      );
+      const token    = window.g_ck || '';
+      const response = await fetch('/api/1917927/license_return/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept':        'application/json',
+          'X-UserToken':   token
+        },
+        body: JSON.stringify({
+          employeeId:  employeeId,
+          licenseName: selectedLicense.name,
+          licenseId:   selectedLicense.id
+        })
+      });
 
-      const data = await response.json();
-      console.log('Status:', response.status);
-      console.log('Response:', data);
+      // ServiceNow wrапpt setBody() automatisch in { result: ... }
+      const data   = await response.json();
+      const result = data.result ?? data;
+
+      console.log('Status:', response.status, 'Result:', result);
 
       if (response.status === 409) {
-        // Duplikat vom Server erkannt
+        // Server: Duplikat erkannt
         setReturnedIds(prev => new Set(prev).add(selectedLicense.id));
-        setResult({ type: 'warning', message: `Already requested: ${data.result?.message || 'Ticket already exists.'}` });
-      } else if (response.ok && data.result?.success) {
-        // Erfolgreich erstellt – ID als returned markieren
+        const nr = result.incident ? ` (${result.incident})` : '';
+        setResult({
+          type: 'warning',
+          message: `A return request for this license already exists${nr}.`
+        });
+
+      } else if (response.status === 201 && result.success) {
+        // Erfolgreich erstellt
         setReturnedIds(prev => new Set(prev).add(selectedLicense.id));
-        setResult({ type: 'success', message: `Ticket created: ${data.result.incident}` });
+        setResult({
+          type: 'success',
+          message: `Return request submitted successfully. Ticket: ${result.incident}`
+        });
+
+      } else if (response.status === 500 || result.error) {
+        // Echter Serverfehler
+        setResult({
+          type: 'error',
+          message: `Failed to create ticket: ${result.error || 'Unknown server error'}`
+        });
+
       } else {
-        setResult({ type: 'error', message: 'Failed to create ticket.' });
+        // Unerwarteter Status
+        setResult({
+          type: 'error',
+          message: `Unexpected response (${response.status}). Please try again.`
+        });
       }
+
     } catch (err) {
-      setResult({ type: 'error', message: err.message });
+      // Netzwerkfehler o.ä.
+      setResult({ type: 'error', message: `Request failed: ${err.message}` });
     } finally {
       setSubmitting(false);
     }
   };
 
   const displayed = sortKey ? sortLicenses(licenses, sortKey, sortDir) : licenses;
-  const thStyle = { cursor: 'pointer', userSelect: 'none' };
+  const thStyle   = { cursor: 'pointer', userSelect: 'none' };
 
   const resultColors = {
     success: { bg: '#dcfce7', color: '#166534' },
@@ -162,37 +187,50 @@ export default function LicenseReturnPage({ navigate, employeeId }) {
                   <th style={thStyle} onClick={() => handleSort('cost')}>
                     Price <SortIcon active={sortKey === 'cost'} dir={sortDir} />
                   </th>
+                  <th style={{ textAlign: 'center' }}>Return</th>
                 </tr>
               </thead>
               <tbody>
-                {displayed.map((license, index) => (
-                  <tr
-                    key={index}
-                    className={`table-row ${selectedLicense?.id === license.id ? 'selected' : ''}`}
-                    onClick={() => handleLicenseClick(license)}
-                    style={{ opacity: returnedIds.has(license.id) ? 0.45 : 1 }}
-                  >
-                    <td className="license-id">{license.id}</td>
-                    <td className="license-name">
-                      {license.name}
-                      {returnedIds.has(license.id) && (
-                        <span style={{
-                          marginLeft: 8, fontSize: 11, color: '#854d0e',
-                          background: '#fef9c3', padding: '2px 6px', borderRadius: 10
-                        }}>
-                          requested
+                {displayed.map((license, index) => {
+                  const isRequested = returnedIds.has(license.id);
+                  return (
+                    <tr
+                      key={index}
+                      className={`table-row ${selectedLicense?.id === license.id ? 'selected' : ''}`}
+                      onClick={() => handleLicenseClick(license)}
+                      style={{ opacity: isRequested ? 0.5 : 1 }}
+                    >
+                      <td className="license-id">{license.id}</td>
+                      <td className="license-name">
+                        {license.name}
+                        {isRequested && (
+                          <span style={{
+                            marginLeft: 8, fontSize: 11, color: '#854d0e',
+                            background: '#fef9c3', padding: '2px 7px', borderRadius: 10,
+                            fontWeight: 500
+                          }}>
+                            requested
+                          </span>
+                        )}
+                      </td>
+                      <td className="license-date" style={{ textAlign: 'center' }}>
+                        {license.date || '—'}
+                      </td>
+                      <td>
+                        <span className={`status-badge ${license.status.toLowerCase()}`}>
+                          {license.status}
                         </span>
-                      )}
-                    </td>
-                    <td className="license-date" style={{ textAlign: 'center' }}>{license.date || '—'}</td>
-                    <td>
-                      <span className={`status-badge ${license.status.toLowerCase()}`}>
-                        {license.status}
-                      </span>
-                    </td>
-                    <td className="license-cost">{license.cost}</td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="license-cost">{license.cost}</td>
+                      <td style={{ textAlign: 'center' }}>
+                        {isRequested
+                          ? <span style={{ fontSize: 16 }} title="Return already requested">⏳</span>
+                          : <span style={{ fontSize: 16, color: '#aaa' }}>—</span>
+                        }
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -214,14 +252,34 @@ export default function LicenseReturnPage({ navigate, employeeId }) {
                 <label>Product ID</label>
                 <div className="field-value">{selectedLicense.id}</div>
               </div>
-              <button
-                className="return-btn"
-                onClick={handleReturn}
-                disabled={submitting || returnedIds.has(selectedLicense.id)}
-                style={{ opacity: returnedIds.has(selectedLicense.id) ? 0.5 : 1 }}
-              >
-                {submitting ? 'Creating ticket...' : returnedIds.has(selectedLicense.id) ? 'Already requested' : 'Return License'}
-              </button>
+              {selectedLicense.manufacturerName && (
+                <div className="detail-field">
+                  <label>Manufacturer</label>
+                  <div className="field-value">{selectedLicense.manufacturerName}</div>
+                </div>
+              )}
+
+              {returnedIds.has(selectedLicense.id) ? (
+                // Bereits requested → kein Button, nur Info
+                <div style={{
+                  marginTop: 16, padding: '12px 14px', borderRadius: 8,
+                  backgroundColor: '#fef9c3', color: '#854d0e', fontSize: 13
+                }}>
+                  ⏳ A return request for this license has already been submitted.
+                  An incident is open and being processed.
+                </div>
+              ) : (
+                // Noch nicht requested → Button anzeigen
+                <button
+                  className="return-btn"
+                  onClick={handleReturn}
+                  disabled={submitting}
+                >
+                  {submitting ? 'Creating ticket...' : 'Return License'}
+                </button>
+              )}
+
+              {/* Feedback-Nachricht (Erfolg, Duplikat vom Server, echter Fehler) */}
               {result && (
                 <div style={{
                   marginTop: 12, padding: '10px 14px', borderRadius: 8, fontSize: 13,
