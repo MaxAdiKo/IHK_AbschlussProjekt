@@ -3,43 +3,34 @@ import './ActionCards.css';
 
 const icons = {
   cost: (
-    <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
-      <text x="32" y="38" textAnchor="middle" fontSize="30" fill="white"
-        fontWeight="300" opacity="0.35"
-        transform="rotate(-15 32 30)">$</text>
-      <text x="22" y="36" textAnchor="middle" fontSize="30" fill="white"
-        fontWeight="300" opacity="0.95">$</text>
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+      stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="2" x2="12" y2="22"/>
+      <path d="M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
     </svg>
   ),
   return: (
-    <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
-      <g opacity="0.35" transform="translate(5, -4) rotate(-8 26 26)">
-        <line x1="12" y1="38" x2="36" y2="14" stroke="white" strokeWidth="3" strokeLinecap="round"/>
-        <polyline points="12,26 12,38 24,38" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-        <polyline points="36,26 36,14 24,14" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-      </g>
-      <g opacity="0.95">
-        <line x1="10" y1="40" x2="34" y2="16" stroke="white" strokeWidth="3" strokeLinecap="round"/>
-        <polyline points="10,28 10,40 22,40" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-        <polyline points="34,28 34,16 22,16" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-      </g>
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+      stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="17 1 21 5 17 9"/>
+      <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+      <polyline points="7 23 3 19 7 15"/>
+      <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
     </svg>
   ),
   software: (
-    <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
-      <rect x="16" y="8" width="28" height="20" rx="3" stroke="white" strokeWidth="2.5"
-        fill="none" opacity="0.35" transform="rotate(-8 30 18)"/>
-      <rect x="8" y="16" width="28" height="20" rx="3" stroke="white" strokeWidth="2.5" fill="none" opacity="0.95"/>
-      <polyline points="14,24 18,28 26,20" fill="none" stroke="white" strokeWidth="2.5"
-        strokeLinecap="round" strokeLinejoin="round" opacity="0.95"/>
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+      stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="3" width="20" height="14" rx="2"/>
+      <path d="M8 21h8M12 17v4"/>
     </svg>
   )
 };
 
 export default function ActionCards({ navigate }) {
   const cards = [
-    { title: 'Cost',           icon: icons.cost,     route: 'license-center/cost'   },
-    { title: 'License return', icon: icons.return,   route: 'license-center/return' },
+    { title: 'Cost',           icon: icons.cost,     route: 'license-center/cost'     },
+    { title: 'License return', icon: icons.return,   route: 'license-center/return'   },
     { title: 'Software',       icon: icons.software, route: 'license-center/software' }
   ];
 

@@ -33,7 +33,10 @@
 .card-icon {
   display: flex;
   align-items: center;
-  opacity: 0.9;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
 }
 
 @media (max-width: 768px) {
