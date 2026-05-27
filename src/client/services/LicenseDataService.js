@@ -183,29 +183,22 @@ export class LicenseDataService {
 
   static async getMonthlyCosts(employeeId = null) {
     const totalCost = await this.getTotalCost(employeeId);
-    return [
-      { month: 'Aug', value: Math.round(totalCost * 0.75) },
-      { month: 'Sep', value: Math.round(totalCost * 0.95) },
-      { month: 'Oct', value: Math.round(totalCost * 0.85) },
-      { month: 'Nov', value: Math.round(totalCost) },
-      { month: 'Dec', value: Math.round(totalCost * 1.05) }
-    ];
+    const months = ['Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return months.map(month => ({
+      month,
+      value: Math.round(totalCost)
+    }));
   }
 
   static async getLineChartData(employeeId = null) {
     const total = await this.getTotalCost(employeeId);
-    const base  = total / 100;
     return {
-      main:       [0.45, 0.52, 0.48, 0.65, 0.59, 0.73].map(f => Math.round(base * f)),
-      comparison: [0.38, 0.45, 0.42, 0.58, 0.52, 0.65].map(f => Math.round(base * f))
+      main:       Array(6).fill(Math.round(total)),
+      comparison: []
     };
   }
 
   static async getCostGrowth(employeeId = null) {
-    const monthly  = await this.getMonthlyCosts(employeeId);
-    const current  = monthly[monthly.length - 2].value;
-    const previous = monthly[monthly.length - 3].value;
-    const growth   = ((current - previous) / previous) * 100;
-    return `${growth > 0 ? '+' : ''}${growth.toFixed(0)}%`;
+    return 'n/a';
   }
 }
