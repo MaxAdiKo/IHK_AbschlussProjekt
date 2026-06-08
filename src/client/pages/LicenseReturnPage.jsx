@@ -100,7 +100,7 @@ export default function LicenseReturnPage({ navigate, employeeId }) {
         })
       });
 
-      // ServiceNow wrапpt setBody() automatisch in { result: ... }
+      // ServiceNow wrapt setBody() automatisch in { result: ... }
       const data   = await response.json();
       const result = data.result ?? data;
 
@@ -259,8 +259,8 @@ export default function LicenseReturnPage({ navigate, employeeId }) {
                 </div>
               )}
 
-              {returnedIds.has(selectedLicense.id) ? (
-                // Bereits requested → kein Button, nur Info
+              {returnedIds.has(selectedLicense.id) && result?.type !== 'success' ? (
+                // Bereits requested → kein Button, nur orange Info-Box
                 <div style={{
                   marginTop: 16, padding: '12px 14px', borderRadius: 8,
                   backgroundColor: '#fef9c3', color: '#854d0e', fontSize: 13
@@ -268,7 +268,7 @@ export default function LicenseReturnPage({ navigate, employeeId }) {
                   ⏳ A return request for this license has already been submitted.
                   An incident is open and being processed.
                 </div>
-              ) : (
+              ) : !returnedIds.has(selectedLicense.id) ? (
                 // Noch nicht requested → Button anzeigen
                 <button
                   className="return-btn"
@@ -277,7 +277,7 @@ export default function LicenseReturnPage({ navigate, employeeId }) {
                 >
                   {submitting ? 'Creating ticket...' : 'Return License'}
                 </button>
-              )}
+              ) : null}
 
               {/* Feedback-Nachricht (Erfolg, Duplikat vom Server, echter Fehler) */}
               {result && (
