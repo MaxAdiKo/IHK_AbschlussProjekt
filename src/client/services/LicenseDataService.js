@@ -147,6 +147,62 @@ export class LicenseDataService {
 
     return returnedIds;
   }
+/**
+   * Prüft welche Lizenzen für diesen Mitarbeiter bereits einen
+   * offenen Extension-Incident haben → gibt ein Set von Lizenz-IDs zurück.
+   * (Gleiches Muster wie getExistingReturnRequests)
+   */
+static async getExistingExtensionRequests(employeeId) {
+  const headers = this._getHeaders();
+
+  const url = '/api/now/table/incident' +
+    '?sysparm_fields=number,description,state' +
+    `&sysparm_query=short_description=License Extension Request` +
+    `^descriptionCONTAINSEmployee ID ${encodeURIComponent(employeeId)}` +
+    `^stateNOT IN6,7` +
+    '&sysparm_limit=200';
+
+  const resp = await fetch(url, { headers });
+  if (!resp.ok) return new Set();
+  const data = await resp.json();
+
+  const extendedIds = new Set();
+  (data.result || []).forEach(inc => {
+    const desc  = inc.description?.value ?? inc.description ?? '';
+    const match = desc.match(/\(ID:\s*(\S+?)\)/);
+    if (match) extendedIds.add(match[1]);
+  });
+
+  return extendedIds;
+}
+
+
+  static async getExistingDecisions(employeeId) {
+    const headers = this._getHeaders();
+
+    const url = '/api/now/table/incident' +
+      '?sysparm_fields=number,short_description,description,state' +
+      `&sysparm_query=short_descriptionINLicense Extension Request,License Cancellation Request` +
+      `^descriptionCONTAINSEmployee ID ${encodeURIComponent(employeeId)}` +
+      `^stateNOT IN6,7` +
+      '&sysparm_limit=200';
+
+    const resp = await fetch(url, { headers });
+    if (!resp.ok) return new Map();
+    const data = await resp.json();
+
+    const decisions = new Map();
+    (data.result || []).forEach(inc => {
+      const desc  = inc.description?.value       ?? inc.description       ?? '';
+      const short = inc.short_description?.value ?? inc.short_description ?? '';
+      const match = desc.match(/\(ID:\s*(\S+?)\)/);
+      if (match) {
+        decisions.set(match[1], short.includes('Extension') ? 'extend' : 'cancel');
+      }
+    });
+
+    return decisions;
+  }
 
   static async getAllLicenses(employeeId = null) {
     const licenses = await this._fetchFromServiceNow(employeeId);
